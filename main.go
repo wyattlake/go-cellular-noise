@@ -17,15 +17,15 @@ const (
 	//Width and height values
 	WIDTH           = 500
 	HEIGHT          = 500
-	CELL_COUNT      = 50
-	BOARD_SIZE      = 5.0
+	CELL_COUNT      = 800
+	BOARD_SIZE      = 20.0
 	MOVEMENT_FACTOR = 1.0
 )
 
-func initialize_map(noise_map *[HEIGHT][WIDTH]uint8) {
+func initialize_map(noise_map *[HEIGHT][WIDTH][3]uint8) {
 	for _, y := range noise_map {
 		for i, _ := range y {
-			y[i] = 1
+			y[i] = [3]uint8{255, 255, 255}
 		}
 	}
 }
@@ -87,7 +87,7 @@ func cellular_noise(noise_map *[HEIGHT][WIDTH]uint8) {
 	}
 }
 
-func cellular_noise_gif(noise_map [HEIGHT][WIDTH]uint8, frames_per_rotation int) {
+func cellular_noise_gif(noise_map [HEIGHT][WIDTH][3]uint8, frames_per_rotation int) {
 	cells := make([][2]float64, CELL_COUNT)
 	radii := make([]float64, CELL_COUNT)
 	start_pos := make([]float64, CELL_COUNT)
@@ -104,19 +104,19 @@ func cellular_noise_gif(noise_map [HEIGHT][WIDTH]uint8, frames_per_rotation int)
 		r = rand.New(s)
 		start_pos[i] = r.Float64() * 10
 	}
-	frames := make([][HEIGHT][WIDTH]uint8, frames_per_rotation)
+	frames := make([][HEIGHT][WIDTH][3]uint8, frames_per_rotation)
 	for t := 0; t < frames_per_rotation; t++ {
 		for yi, yv := range noise_map {
 			for xi, _ := range yv {
 				current_point := [2]float64{float64(xi) / float64(WIDTH) * BOARD_SIZE, float64(yi) / float64(HEIGHT) * BOARD_SIZE}
 				distances := make([]float64, CELL_COUNT)
-				const cell_distance_id = 0
+				const cell_distance_id = 1
 				for i, v := range cells {
 					distance := distance(current_point, [2]float64{v[0] + (math.Sin(2*math.Pi*((float64(t)/float64(frames_per_rotation))+start_pos[i])) * radii[i]), v[1] + (math.Cos(2*math.Pi*((float64(t)/float64(frames_per_rotation))+start_pos[i])) * radii[i])})
 					distances[i] = distance
 				}
 				sort.Float64s(distances)
-				noise_map[yi][xi] = uint8(clamp(distances[cell_distance_id], 0.0, 1.0) * 255)
+				noise_map[yi][xi] = [3]uint8{uint8(clamp(distances[0]*255, 0, 255)), uint8(clamp(distances[0]*255, 0, 255)), uint8(clamp(distances[0]*255, 0, 255))}
 			}
 		}
 		frames[t] = noise_map
@@ -125,7 +125,6 @@ func cellular_noise_gif(noise_map [HEIGHT][WIDTH]uint8, frames_per_rotation int)
 		frame := image.NewRGBA(image.Rect(0, 0, WIDTH, HEIGHT))
 		write_image(noise_map, frame)
 		name := fmt.Sprintf("frame%d.png", i)
-		fmt.Println(name)
 		f, err := os.Create(name)
 		if err != nil {
 			log.Fatal(err)
@@ -138,10 +137,10 @@ func cellular_noise_gif(noise_map [HEIGHT][WIDTH]uint8, frames_per_rotation int)
 	}
 }
 
-func write_image(noise_map [HEIGHT][WIDTH]uint8, image *image.RGBA) {
+func write_image(noise_map [HEIGHT][WIDTH][3]uint8, image *image.RGBA) {
 	for yi, yv := range noise_map {
 		for xi, xv := range yv {
-			image.Set(xi, yi, color.RGBA{xv, xv, xv, 255})
+			image.Set(xi, yi, color.RGBA{xv[0], xv[1], xv[2], 255})
 		}
 	}
 }
@@ -149,7 +148,7 @@ func write_image(noise_map [HEIGHT][WIDTH]uint8, image *image.RGBA) {
 func main() {
 
 	//Creates the map
-	var noise_map [HEIGHT][WIDTH]uint8
+	var noise_map [HEIGHT][WIDTH][3]uint8
 
 	//Fills the map with white
 	initialize_map(&noise_map)

@@ -112,7 +112,7 @@ func cellular_noise_gif(noise_map [HEIGHT][WIDTH]uint8, frames_per_rotation int)
 				distances := make([]float64, CELL_COUNT)
 				const cell_distance_id = 0
 				for i, v := range cells {
-					distance := distance(current_point, [2]float64{v[0] + (math.Sin(2 * math.Pi * ((float64(t) / float64(frames_per_rotation)) + start_pos[i]) * radii[i])), v[1] + (math.Cos(2*math.Pi*((float64(t)/float64(frames_per_rotation))+start_pos[i])) * radii[i])})
+					distance := distance(current_point, [2]float64{v[0] + (math.Sin(2*math.Pi*((float64(t)/float64(frames_per_rotation))+start_pos[i])) * radii[i]), v[1] + (math.Cos(2*math.Pi*((float64(t)/float64(frames_per_rotation))+start_pos[i])) * radii[i])})
 					distances[i] = distance
 				}
 				sort.Float64s(distances)
